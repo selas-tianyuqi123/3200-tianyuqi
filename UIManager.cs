@@ -9,6 +9,7 @@ public class UIManager : MonoBehaviour {
     public UIGameOver GameOver;
     //Gold number--UI
     public Text UIGoldCount;
+    public Transform UIHp;
     //Alert about covid-19
     public Text UIMsg;
     //different situation about text（different alert about covid-19）
@@ -45,8 +46,10 @@ public class UIManager : MonoBehaviour {
         "wear a surgical mask when you are in the same room as the sick person.The sick person should also wear a mask when other people are in the same room";
     //To library the message 
     public string[] msgs;
-    //单例模式
+    //The singleton pattern ensures that there is only one instance of a class, and it instantiates itself and provides that instance to the entire system
+    //A static variable_instance
     private static UIManager _instance;
+    //Public static variable, return _instance value when Get
     public static UIManager Instance
     {
         get
@@ -59,18 +62,47 @@ public class UIManager : MonoBehaviour {
 	void Awake () {
         //using '|' to separate all message
         msgs = msg.Split('|');
+        //Point _instance to itself, and when other classes call it, it will point to that class
         _instance = this;
         HideMsg();
+        Refresh();
+    }
+
+    public void Refresh()
+    {
         //Get the number of gold form playerprefs
-        _goldCount = PlayerPrefs.GetInt("gold",0);
+        _goldCount = PlayerPrefs.GetInt("gold", 0);
         AddGold(0);
-	}
-	//The way of counting gold
+        AddHp(0);
+    }
+
+    //The way of counting gold
     public void AddGold(int i)
     {
         _goldCount += i;
         UIGoldCount.text = _goldCount.ToString();
     }
+
+    /// <summary>
+    /// refreshing HP
+    /// </summary>
+    /// <param name="hp"></param>
+    public void AddHp(int hp)
+    {
+        AIManager.Instance.hpCount += hp;
+        //when HP<0, game is over
+        if (AIManager.Instance.hpCount <= 0)
+        {
+            ShowGameOver("GAME OVER");
+        }
+        //when updating the ui what ever value, five hp hearts will re
+        for (int i = 0; i < UIHp.childCount; i++)
+        {
+            //if i < HP， so it‘s active if not， hide this hearts.
+            UIHp.GetChild(i).gameObject.SetActive(i < AIManager.Instance.hpCount ? true : false);
+        }
+    }
+
     //The screen will show the message, and base on the situation gives one of message from the library.
     public void ShowMsg(MsgType s)
     {
@@ -97,6 +129,8 @@ public class UIManager : MonoBehaviour {
     //Game over, the title will show, in the screen.
     public void ShowGameOver(string title)
     {
+        //The game speed is set to 0 ， and it's main to shutdown the game
+        Time.timeScale = 0;
         GameOver.SetTitle(title);
         GameOver.gameObject.SetActive(true);
     }

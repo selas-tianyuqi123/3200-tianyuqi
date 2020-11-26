@@ -8,7 +8,8 @@ public class AIManager : MonoSingleton<AIManager>
     public NPC[] npcs;
 
     private List<GameObject> wayPoints = new List<GameObject>();
-
+    //Current HP in game
+    public int hpCount = 5;
     public int Level = 0;
     [HideInInspector]
     public List<GameObject> goldList = new List<GameObject>();
@@ -17,9 +18,19 @@ public class AIManager : MonoSingleton<AIManager>
     {
 
     }
+    //Since AIManager does not delete the game after it starts, the Start function is only executed once, so every time the game is started, the data is cleaned up and reset, and the gold UI is updated
+    public void Start()
+    {
+        UIManager.Instance.Quit();
+        UIManager.Instance.Refresh();
+    }
+
     //Go to next level
     public void Next()
     {
+        //The speed of game is 1
+        Time.timeScale = 1f;
+        hpCount = 5;
         RandomGold();
         RandomNPC();
     }
@@ -28,33 +39,39 @@ public class AIManager : MonoSingleton<AIManager>
     /// </summary>
     public void RandomGold()
     {
+        //Determine if golds is full or not, delete this script
         if (golds == null)
         {
             Destroy(gameObject);
             return;
         }
-
+        //going through all the children under golds,and add to the waypoint list, This list will hold all path points and generates golds.
         for (int i = 0; i < golds.childCount; i++)
         {
             GameObject g = golds.GetChild(i).gameObject;
             wayPoints.Add(g);
         }
-
+        //setting random coins
         Random.InitState((int)System.DateTime.Now.Ticks);
-
+        //leve+ 5coins for successful
         for (int i = 0; i < 5 + Level; i++)
-        {
+        {   
+            //random number
             int index = Random.Range(0, wayPoints.Count);
+            //infinite random
             while (true)
             {
+                //Determine if this point is active or not. Activation means it has been used. Re-random a number.
                 if (wayPoints[index].activeSelf)
                 {
                     index = Random.Range(0, wayPoints.Count);
                 }
                 else
                 {
+                    //create golds.
                     GameObject g = Instantiate(wayPoints[index], golds);
                     g.SetActive(true);
+                    //adding to golds list.
                     goldList.Add(g);
                     break;
                 }
